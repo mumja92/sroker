@@ -14,7 +14,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
-class SrokerView(c: Context?) : View(c) {
+class SrokerView(
+    c: Context?,
+    private var numberOfPlayers: Int,
+) : View(c) {
     private val myPaint = Paint()
     private var locationX = 0F
     private var locationY = 0F
