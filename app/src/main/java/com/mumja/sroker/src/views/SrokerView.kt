@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.mumja.sroker.src.communication.*
@@ -23,16 +24,24 @@ class SrokerView(
     private var locationY = 0F
     private var srokerClient : ISrokerClient? = null
     private var srokerServer : ISrokerServer? = null
+    private val serverChannel = Channel<Message>()
+    private val channels = mutableListOf<Channel<Message>>()
+    private var maxPlayers = 10
 
         init {
+            for (i in 1..maxPlayers){
+                val channel = Channel<Message>()
+                channels.add(channel)
+            }
             myPaint.color = Color.rgb(0, 255, 0)
             myPaint.strokeWidth = 10F
             startServerChannel()
             srokerServer?.run()
             GlobalScope.launch{
                 while(true){
-                    val message = srokerClient?.getMessage()
-                    when(message?.type){
+                    val message = srokerClient!!.getMessage()
+                    Log.i("SROKER", "View parsing: MessageId: " + message.id + ","+ message.type.toString())
+                    when(message.type){
                         MessageType.TEST -> {
                             locationX = (0..500).random().toFloat()
                             locationY = (0..500).random().toFloat()
@@ -93,9 +102,7 @@ class SrokerView(
     }
 
     private fun startServerChannel(){
-        val channel1 = Channel<Message>()
-        val channel2 = Channel<Message>()
-        srokerClient = SrokerClientChannel(channel1, channel2)
-        srokerServer = SrokerServerChannel(channel2, channel1)
+        srokerServer = SrokerServerChannel(serverChannel, channels)
+        srokerClient = SrokerClientChannel(serverChannel, channels[2], 2)
     }
 }
